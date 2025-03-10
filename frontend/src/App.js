@@ -1,13 +1,14 @@
 import React, { useState, useRef } from "react";
 import axios from "axios";
-import Switch from "./components/Switch"; // Import the Switch component
+import Switch from "./components/Switch";
 import "./App.css";
 
 function App() {
   const [recording, setRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState(null);
   const [transcription, setTranscription] = useState("");
-  const [sqlQuery, setSqlQuery] = useState("");
+  const [sqlQueries, setSqlQueries] = useState([]); // Store multiple queries
+  const [queryResults, setQueryResults] = useState([]); // Store multiple query results
   const [isLoading, setIsLoading] = useState(false);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
@@ -43,8 +44,6 @@ function App() {
     }
   };
 
-  
-
   const handleRecordingToggle = () => {
     if (recording) {
       stopRecording();
@@ -53,7 +52,6 @@ function App() {
     }
     setRecording(!recording);
   };
-  
 
   const handleUpload = async () => {
     if (!audioBlob) return;
@@ -68,7 +66,8 @@ function App() {
       });
 
       if (response.data?.transcription) setTranscription(response.data.transcription);
-      if (response.data?.sqlQuery) setSqlQuery(response.data.sqlQuery);
+      if (response.data?.sqlQueries) setSqlQueries(response.data.sqlQueries); // Set multiple queries
+      if (response.data?.results) setQueryResults(response.data.results); // Store results per query
     } catch (error) {
       console.error("Error uploading audio:", error);
     } finally {
@@ -83,9 +82,8 @@ function App() {
 
         <div className="button-container">
           <div className="button-group">
-            {/* Replace the old buttons with the Switch component */}
             <div onClick={handleRecordingToggle}>
-            <Switch checked={recording} onChange={handleRecordingToggle} isLoading={isLoading} />
+              <Switch checked={recording} onChange={handleRecordingToggle} isLoading={isLoading} />
             </div>
           </div>
 
@@ -101,7 +99,7 @@ function App() {
                   Processing...
                 </>
               ) : (
-                'Upload and Transcribe'
+                "Upload and Transcribe"
               )}
             </button>
           )}
@@ -114,10 +112,57 @@ function App() {
           </div>
         )}
 
-        {sqlQuery && (
+        {sqlQueries.length > 0 && (
           <div className="result-card">
-            <h3 className="result-title">Generated SQL Query:</h3>
-            <pre className="sql-query">{sqlQuery}</pre>
+            <h3 className="result-title">Generated SQL Queries:</h3>
+            <ul className="sql-query-list">
+              {sqlQueries.map((query, index) => (
+                <li key={index} className="sql-query">
+                  <pre>{query}</pre>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {queryResults.length > 0 && (
+          <div className="result-card">
+            <h3 className="result-title">Query Results:</h3>
+            {queryResults.map((result, index) => (
+              <div key={index} className="query-result-container">
+                <h4>Query {index + 1}:</h4>
+                <pre className="sql-query">{result.query}</pre>
+                {result.error ? (
+                  <p className="error-text">{result.error}</p>
+                ) : (
+                  <table className="result-table">
+                    <thead>
+                      <tr>
+                        {result.rows.length > 0 &&
+                          Object.keys(result.rows[0]).map((key) => (
+                            <th key={key}>{key}</th>
+                          ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {result.rows.length > 0 ? (
+                        result.rows.map((row, rowIndex) => (
+                          <tr key={rowIndex}>
+                            {Object.values(row).map((value, i) => (
+                              <td key={i}>{value}</td>
+                            ))}
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="100%">No results found.</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            ))}
           </div>
         )}
       </div>

@@ -1,6 +1,7 @@
 import whisper
 import sys
 import warnings
+sys.stdout.reconfigure(encoding='utf-8')  # Force UTF-8 output
 
 # Suppress specific warnings
 warnings.filterwarnings("ignore", category=UserWarning, module="whisper")
