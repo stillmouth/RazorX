@@ -113,7 +113,8 @@ app.post('/upload', upload.single('audio'), async (req, res) => {
       messages: [{
         role: 'user',
         content: `Check for any syntax errors in this: \n${sqlQueries}\n
-        Return it in the exact same format after fixing. Do not add anything else in your response.`,
+        Return it in the exact same format after fixing. Ensure it is supported by SQLite3.
+        If not, fix it to adhere to SQLite3. Do not add anything else in your response.`,
       }],
     };
 
