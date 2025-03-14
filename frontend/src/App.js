@@ -2,14 +2,19 @@ import React, { useState, useRef } from "react";
 import axios from "axios";
 import Switch from "./components/Switch";
 import "./App.css";
+import ModeToggle from "./components/ModeToggle";
+import AestheticButton from "./components/AestheticButton";
+
 
 function App() {
   const [recording, setRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState(null);
   const [transcription, setTranscription] = useState("");
+  const [editedTranscription, setEditedTranscription] = useState("");
   const [sqlQueries, setSqlQueries] = useState([]); // Store multiple queries
   const [queryResults, setQueryResults] = useState([]); // Store multiple query results
   const [isLoading, setIsLoading] = useState(false);
+  const [isManualMode, setIsManualMode] = useState(true); // Toggle between Manual and Automatic Mode
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
 
@@ -65,9 +70,15 @@ function App() {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      if (response.data?.transcription) setTranscription(response.data.transcription);
-      if (response.data?.sqlQueries) setSqlQueries(response.data.sqlQueries); // Set multiple queries
-      if (response.data?.results) setQueryResults(response.data.results); // Store results per query
+      if (response.data?.transcription) {
+        setTranscription(response.data.transcription);
+        setEditedTranscription(response.data.transcription); // Initialize edited transcription
+
+        // If in Automatic Mode, automatically send the transcription to GPT
+        if (!isManualMode) {
+          handleExecute(response.data.transcription);
+        }
+      }
     } catch (error) {
       console.error("Error uploading audio:", error);
     } finally {
@@ -75,10 +86,37 @@ function App() {
     }
   };
 
+  const handleExecute = async (transcriptionText = editedTranscription) => {
+    if (!transcriptionText) return;
+
+    setIsLoading(true);
+    try {
+      const response = await axios.post("http://localhost:5000/execute", {
+        transcription: transcriptionText,
+      });
+
+      if (response.data?.sqlQueries) setSqlQueries(response.data.sqlQueries); // Set multiple queries
+      if (response.data?.results) setQueryResults(response.data.results); // Store results per query
+    } catch (error) {
+      console.error("Error executing transcription:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleModeToggle = () => {
+    setIsManualMode((prevMode) => !prevMode);
+  };
+
   return (
     <div className="App">
       <div className="main-container">
-        <h1 className="app-title">Voice Command to SQL</h1>
+        <h1 className="app-title">RazorX ReportX</h1>
+
+        {/* Mode Toggle Switch */}
+        <div className="mode-toggle">
+          <ModeToggle isManualMode={isManualMode} onToggle={handleModeToggle} />
+        </div>
 
         <div className="button-container">
           <div className="button-group">
@@ -88,11 +126,7 @@ function App() {
           </div>
 
           {audioBlob && (
-            <button
-              onClick={handleUpload}
-              disabled={isLoading}
-              className="button upload-button"
-            >
+            <AestheticButton onClick={handleUpload} disabled={isLoading}>
               {isLoading ? (
                 <>
                   <div className="loading-spinner"></div>
@@ -101,14 +135,40 @@ function App() {
               ) : (
                 "Upload and Transcribe"
               )}
-            </button>
+            </AestheticButton>          
           )}
         </div>
 
         {transcription && (
           <div className="result-card">
             <h3 className="result-title">Transcription:</h3>
-            <p className="transcription-text">{transcription}</p>
+            {isManualMode ? (
+              <>
+                <textarea
+                  className="transcription-text"
+                  value={editedTranscription}
+                  onChange={(e) => setEditedTranscription(e.target.value)}
+                  rows="4"
+                  cols="50"
+                />
+                <button
+                  onClick={() => handleExecute()}
+                  disabled={isLoading}
+                  className="button execute-button"
+                >
+                  {isLoading ? (
+                    <>
+                      <div className="loading-spinner"></div>
+                      Executing...
+                    </>
+                  ) : (
+                    "EXECUTE"
+                  )}
+                </button>
+              </>
+            ) : (
+              <p className="transcription-text">{transcription}</p>
+            )}
           </div>
         )}
 

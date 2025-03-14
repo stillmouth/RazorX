@@ -17,6 +17,7 @@ require('dotenv').config();
 
 // Use CORS to allow cross-origin requests
 app.use(cors());
+app.use(express.json()); // Add this to parse JSON request bodies
 
 // Set up storage engine for Multer
 const storage = multer.diskStorage({
@@ -64,16 +65,45 @@ app.post('/upload', upload.single('audio'), async (req, res) => {
     console.log(`File uploaded: ${audioPath}`);
 
     const transcribeScriptPath = path.join(__dirname, 'whisper', 'transcribe.py');
-    const getSchemaScriptPath = path.join(__dirname, 'get_schema.py');
 
     // Step 1: Transcribe the audio
     const transcription = await runPythonScript(transcribeScriptPath, audioPath);
     console.log(`Transcription from Python: ${transcription}`);
 
-    // Step 2: Get the schema
+    // Step 2: Return the transcription to the client
+    res.json({ transcription });
+
+    // Step 3: Clean up uploaded files
+    fs.readdir(uploadsDir, (err, files) => {
+      if (err) {
+        console.error('Error reading uploads directory:', err);
+        return;
+      }
+      for (const file of files) {
+        fs.unlink(path.join(uploadsDir, file), (err) => {
+          if (err) {
+            console.error(`Error deleting file ${file}:`, err);
+          }
+        });
+      }
+    });
+
+  } catch (error) {
+    console.error('Error in /upload endpoint:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// New endpoint to handle execution of edited transcription
+app.post('/execute', async (req, res) => {
+  try {
+    const { transcription } = req.body;
+
+    // Step 1: Get the schema
+    const getSchemaScriptPath = path.join(__dirname, 'get_schema.py');
     const schema = await runPythonScript(getSchemaScriptPath, 'database.db');
 
-    // Step 3: Call Groq API to generate SQL queries
+    // Step 2: Call Groq API to generate SQL queries
     const apiUrl = process.env.GROQ_API_URL || 'https://api.groq.com/openai/v1/chat/completions';
     const apiKey = process.env.GROQ_API_KEY;
     const headers = { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' };
@@ -91,7 +121,7 @@ app.post('/upload', upload.single('audio'), async (req, res) => {
         In case of a query like a personal question, return only a 'REASON:' followed by the reason.
         Adhere strictly to the schema provided.
         If the question is too vague, try to return SQLQueries that give some context to the given question.
-        Do not provide SQLQueries in your reason. DO NOT USE REASON UNLESS ABSOLUTELY NECESSARY. USE SQLQUERIES
+        Do not provide SQLQueries in your reason. USE REASON ONLY FOR INAPPROPRIATE OR USELESS QUESTIONS. USE SQLQUERIES
         AS MUCH AS POSSIBLE.`,
       }],
     };
@@ -99,14 +129,14 @@ app.post('/upload', upload.single('audio'), async (req, res) => {
     const apiResponse = await axios.post(apiUrl, payload, { headers });
     let sqlQueries = apiResponse.data.choices[0].message.content.trim();
 
-    // Step 3.1: Check if response contains a reason instead of queries
+    // Step 2.1: Check if response contains a reason instead of queries
     if (sqlQueries.startsWith('REASON:')) {
       const reason = sqlQueries.replace('REASON:', '').trim();
       console.warn('API returned a reason:', reason);
       return res.status(400).json({ error: 'Query not generated', reason });
     }
 
-    // Step 3.2: Refine SQL queries
+    // Step 2.2: Refine SQL queries
     const apiUrlRefining = process.env.GROQ_API_URL_REFINING || 'https://api.groq.com/openai/v1/chat/completions';
     const apiKeyRefining = process.env.GROQ_API_KEY_REFINING;
     const refineHeaders = { 'Authorization': `Bearer ${apiKeyRefining}`, 'Content-Type': 'application/json' };
@@ -115,8 +145,8 @@ app.post('/upload', upload.single('audio'), async (req, res) => {
       model: 'llama-3.3-70b-versatile',
       messages: [{
         role: 'user',
-        content: `Check for any syntax errors in this: \n${sqlQueries}\n
-        Return it in the exact same format after fixing. Ensure it is supported by SQLite3.
+        content: `Check for any syntax errors in this: \n${sqlQueries}\n for the question \n${transcription}\n\n
+        Return the SQLQueries in the exact same format after fixing. Ensure it is supported by SQLite3.
         If not, fix it to adhere to SQLite3. Do not add anything else in your response.`,
       }],
     };
@@ -131,7 +161,7 @@ app.post('/upload', upload.single('audio'), async (req, res) => {
       .filter(query => query.startsWith("SQLQUERY:"))
       .map(query => query.replace(/^SQLQUERY:\s*/, ""));  // Ensures both "SQLQUERY: " and "SQLQUERY:" are handled
 
-    // Step 4: Execute all SQL queries
+    // Step 3: Execute all SQL queries
     const db = new sqlite3.Database('database.db', sqlite3.OPEN_READWRITE, (err) => {
       if (err) {
         console.error('Database connection error:', err);
@@ -162,30 +192,11 @@ app.post('/upload', upload.single('audio'), async (req, res) => {
     } finally {
       db.close();
     }
-
-    // Step 5: Clean up uploaded files
-    fs.readdir(uploadsDir, (err, files) => {
-      if (err) {
-        console.error('Error reading uploads directory:', err);
-        return;
-      }
-      for (const file of files) {
-        fs.unlink(path.join(uploadsDir, file), (err) => {
-          if (err) {
-            console.error(`Error deleting file ${file}:`, err);
-          }
-        });
-      }
-    });
-
   } catch (error) {
-    console.error('Error in /upload endpoint:', error);
+    console.error('Error in /execute endpoint:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
-
-
-
 
 // Error handling middleware
 app.use((err, req, res, next) => {

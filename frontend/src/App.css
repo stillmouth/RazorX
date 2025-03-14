@@ -98,6 +98,8 @@
   padding: 1rem;
   border-radius: 0.5rem;
   line-height: 1.5;
+  width : 95%;
+  height: 30px;
 }
 
 .sql-query {
@@ -230,4 +232,26 @@
     padding: 6px;
     font-size: 0.9rem;
   }
+}
+.mode-toggle {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mode-toggle label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 16px;
+  color: #333;
+}
+
+.mode-toggle input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
 }
