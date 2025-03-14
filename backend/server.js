@@ -82,14 +82,17 @@ app.post('/upload', upload.single('audio'), async (req, res) => {
       model: 'qwen-2.5-32b',
       messages: [{
         role: 'user',
-        content: `Given only the schema with sample values of a database:\n${schema}\n\nQuestion: ${transcription}\n\n
+        content: `Given only the schema with sample values of my database:\n${schema}\n\nQuestion: ${transcription}\n\n
         Generate an SQLite3 (SQL) query to answer the given question and also generate relevant 
         SQLite3 (SQL) queries to provide context for your answer. Every SQL query must start with 'SQLQUERY:'.
         They must be useful for insights and reporting and must solve the question by visualization or report. 
         Ensure clarity in every table and use JOINs to form bigger tables wherever needed, for more clarity.
         Do NOT include explanations, only the queries. Do not use shorthands for anything including table names.
         In case of a query like a personal question, return only a 'REASON:' followed by the reason.
-        You can return either a reason or an SQL query.`,
+        Adhere strictly to the schema provided.
+        If the question is too vague, try to return SQLQueries that give some context to the given question.
+        Do not provide SQLQueries in your reason. DO NOT USE REASON UNLESS ABSOLUTELY NECESSARY. USE SQLQUERIES
+        AS MUCH AS POSSIBLE.`,
       }],
     };
 
