@@ -9,6 +9,7 @@ const { exec } = require('child_process');
 const app = express();
 require('dotenv').config();
 const uploadsDir = path.join(__dirname, 'uploads');
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 const port = process.env.PORT || 5000;
 
@@ -104,31 +105,27 @@ app.post('/execute', async (req, res) => {
     const schema = await runPythonScript(getSchemaScriptPath, 'database.db');
 
     // Step 2: Call Groq API to generate SQL queries
-    const apiUrl = process.env.GROQ_API_URL || 'https://api.groq.com/openai/v1/chat/completions';
-    const apiKey = process.env.GROQ_API_KEY;
-    const headers = { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' };
+    const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-thinking-exp-01-21" });
 
-    const payload = {
-      model: 'qwen-2.5-32b',
-      messages: [{
-        role: 'user',
-        content: `Given only the schema with sample values of my database:\n${schema}\n\nQuestion: ${transcription}\n\n
-        Generate an SQLite3 (SQL) query to answer the given question and also generate relevant 
-        SQLite3 (SQL) queries to provide context for your answer. Every SQL query must start with 'SQLQUERY:'.
-        They must be useful for insights and reporting and must solve the question by visualization or report. 
-        Ensure clarity in every table and use JOINs to form bigger tables wherever needed, for more clarity.
-        Do NOT include explanations, only the queries. Do not use shorthands for anything including table names.
-        In case of a query like a personal question, return only a 'REASON:' followed by the reason.
-        Adhere strictly to the schema provided.
-        If the question is too vague, try to return SQLQueries that give some context to the given question.
-        Do not provide SQLQueries in your reason. USE REASON ONLY FOR INAPPROPRIATE OR USELESS QUESTIONS. USE SQLQUERIES
-        AS MUCH AS POSSIBLE.`,
-      }],
-    };
+    const prompt = `Given only the schema with sample values of my database:\n${schema}\n\n
+                    Question: ${transcription}\n\n
+                    Generate multiple SQLite3 (SQL) queries to directly answer the given question and provide additional context for insights and reporting.
+                    Every SQL query must start with 'SQLQUERY:'.\n
+                    - The queries must help in visualization or reporting.\n
+                    - Ensure clarity in table structures by using JOINs where necessary.\n
+                    - Do NOT include explanations, comments, or metadata in your response.\n
+                    - If the input question is personal or inappropriate, return only 'REASON:' followed by the reason.\n
+                    - If the question is too vague, generate contextual SQL queries that help understand the subject.\n
+                    - Do NOT mix 'REASON:' with 'SQLQUERY:'. Return only one type of response.\n
+                    - Prioritize providing at least some relevant SQL queries for vague questions instead of returning a reason.\n
+                    - Adhere strictly to the provided schema.
+                    - Avoid giving queries that might return the same result.\n`;
 
-    const apiResponse = await axios.post(apiUrl, payload, { headers });
-    let sqlQueries = apiResponse.data.choices[0].message.content.trim();
 
+    const apiResponse = await model.generateContent(prompt);
+    const sqlQueries = await apiResponse.response.text(); // Extract text
+    //console.log(sqlQueries);
     // Step 2.1: Check if response contains a reason instead of queries
     if (sqlQueries.startsWith('REASON:')) {
       const reason = sqlQueries.replace('REASON:', '').trim();
@@ -137,24 +134,15 @@ app.post('/execute', async (req, res) => {
     }
 
     // Step 2.2: Refine SQL queries
-    const apiUrlRefining = process.env.GROQ_API_URL_REFINING || 'https://api.groq.com/openai/v1/chat/completions';
-    const apiKeyRefining = process.env.GROQ_API_KEY_REFINING;
-    const refineHeaders = { 'Authorization': `Bearer ${apiKeyRefining}`, 'Content-Type': 'application/json' };
-
-    const payload_refining = {
-      model: 'llama-3.3-70b-versatile',
-      messages: [{
-        role: 'user',
-        content: `Check for any syntax and logical errors in this: \n${sqlQueries}\n for the question \n${transcription}\n\n
+    const refinePrompt = `Check for any syntax and logical errors in this: \n${sqlQueries}\n for the question \n${transcription}\n\n
         Given the schema: \n${schema}\n
         Ensure it is supported by SQLite3. If not, fix it to adhere to SQLite3.
-        Return the SQLQueries in the exact same format after fixing. Do not add anything else in your response.`,
-      }],
-    };
+        Return the SQLQueries in the exact same format after fixing. Do not add anything else in your response.`;
 
-    const apiResponseRefined = await axios.post(apiUrlRefining, payload_refining, { headers: refineHeaders });
-    let sqlQueriesRefined = apiResponseRefined.data.choices[0].message.content.trim();
 
+    const apiResponseRefined = await model.generateContent(refinePrompt);
+    let sqlQueriesRefined = await apiResponseRefined.response.text();
+    //console.log(sqlQueriesRefined);
     // Extract queries
     let queries = sqlQueriesRefined
       .split("\n")
