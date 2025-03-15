@@ -145,9 +145,10 @@ app.post('/execute', async (req, res) => {
       model: 'llama-3.3-70b-versatile',
       messages: [{
         role: 'user',
-        content: `Check for any syntax errors in this: \n${sqlQueries}\n for the question \n${transcription}\n\n
-        Return the SQLQueries in the exact same format after fixing. Ensure it is supported by SQLite3.
-        If not, fix it to adhere to SQLite3. Do not add anything else in your response.`,
+        content: `Check for any syntax and logical errors in this: \n${sqlQueries}\n for the question \n${transcription}\n\n
+        Given the schema: \n${schema}\n
+        Ensure it is supported by SQLite3. If not, fix it to adhere to SQLite3.
+        Return the SQLQueries in the exact same format after fixing. Do not add anything else in your response.`,
       }],
     };
 
