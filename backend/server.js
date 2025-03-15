@@ -177,6 +177,19 @@ app.post('/execute', async (req, res) => {
           results.push({ query, error: queryError.message || 'SQL execution failed' });
         }
       }
+      // Save SQL results as JSON
+      fs.writeFileSync("sql_results.json", JSON.stringify(results, null, 2));
+
+      // Call Python script to generate graphs
+      exec("python GenerateGraph.py", (error, stdout, stderr) => {
+          if (error) {
+              console.error(`Graph generation error: ${error.message}`);
+          }
+          if (stderr) {
+              console.error(`Graph generation stderr: ${stderr}`);
+          }
+          console.log(`Graph generation stdout: ${stdout}`);
+      });
       res.json({ transcription, sqlQueries: queries, results });
     } finally {
       db.close();

@@ -1,3 +1,5 @@
 ===============This is a list of Known Issues with the code ============================
 You can send only one request a minute due to the prompt being long. This is not really a problem if the generation of the report itself takes some time.
 We have a limit of 6000 tokens per minute and the current tokens from the prompt are about 3500. 
+For custom databases, fix the number of items displayed and graphs chosen based on number of items in GenerateGraph.py
+For LC.db (database.db) it is 30.

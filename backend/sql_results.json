@@ -1,0 +1,180 @@
+[
+  {
+    "query": "SELECT SUM(price) FROM Orders WHERE date BETWEEN '2025-01-01' AND '2025-03-31';",
+    "rows": [
+      {
+        "SUM(price)": 145851.3
+      }
+    ]
+  },
+  {
+    "query": "SELECT SUM(price) FROM DeletedOrders WHERE date BETWEEN '2025-01-01' AND '2025-03-31';",
+    "rows": [
+      {
+        "SUM(price)": 2360
+      }
+    ]
+  },
+  {
+    "query": "SELECT SUM(price) FROM Orders WHERE date >= date('now', '-3 months');",
+    "rows": [
+      {
+        "SUM(price)": 145851.3
+      }
+    ]
+  },
+  {
+    "query": "SELECT SUM(price) FROM DeletedOrders WHERE date >= date('now', '-3 months');",
+    "rows": [
+      {
+        "SUM(price)": 2360
+      }
+    ]
+  },
+  {
+    "query": "SELECT SUM(o.price + d.price) FROM Orders o JOIN DeletedOrders d ON o.billno = d.billno WHERE o.date >= date('now', '-3 months');",
+    "rows": [
+      {
+        "SUM(o.price + d.price)": null
+      }
+    ]
+  },
+  {
+    "query": "SELECT SUM(price) FROM Orders WHERE strftime('%Y-%m', date) = strftime('%Y-%m', date('now', '-1 month'));",
+    "rows": [
+      {
+        "SUM(price)": 126594
+      }
+    ]
+  },
+  {
+    "query": "SELECT SUM(price) FROM DeletedOrders WHERE strftime('%Y-%m', date) = strftime('%Y-%m', date('now', '-1 month'));",
+    "rows": [
+      {
+        "SUM(price)": 280
+      }
+    ]
+  },
+  {
+    "query": "SELECT strftime('%Y-%m', date) AS month, SUM(price) AS monthly_revenue FROM Orders WHERE date BETWEEN date('now', '-3 months') AND date('now') GROUP BY month;",
+    "rows": [
+      {
+        "month": "2025-01",
+        "monthly_revenue": 234
+      },
+      {
+        "month": "2025-02",
+        "monthly_revenue": 126594
+      },
+      {
+        "month": "2025-03",
+        "monthly_revenue": 19023.3
+      }
+    ]
+  },
+  {
+    "query": "SELECT strftime('%Y-%m', date) AS month, SUM(price) AS monthly_revenue FROM DeletedOrders WHERE date BETWEEN date('now', '-3 months') AND date('now') GROUP BY month;",
+    "rows": [
+      {
+        "month": "2025-02",
+        "monthly_revenue": 280
+      },
+      {
+        "month": "2025-03",
+        "monthly_revenue": 2080
+      }
+    ]
+  },
+  {
+    "query": "SELECT strftime('%Y-%m', date) AS month, SUM(price) AS monthly_revenue FROM (SELECT date, price FROM Orders UNION ALL SELECT date, price FROM DeletedOrders) WHERE date BETWEEN date('now', '-3 months') AND date('now') GROUP BY month;",
+    "rows": [
+      {
+        "month": "2025-01",
+        "monthly_revenue": 234
+      },
+      {
+        "month": "2025-02",
+        "monthly_revenue": 126874
+      },
+      {
+        "month": "2025-03",
+        "monthly_revenue": 21103.3
+      }
+    ]
+  },
+  {
+    "query": "SELECT SUM(price) FROM Orders WHERE date BETWEEN '2025-01-01' AND '2025-03-31' UNION ALL SELECT SUM(price) FROM DeletedOrders WHERE date BETWEEN '2025-01-01' AND '2025-03-31';",
+    "rows": [
+      {
+        "SUM(price)": 145851.3
+      },
+      {
+        "SUM(price)": 2360
+      }
+    ]
+  },
+  {
+    "query": "SELECT SUM(price) FROM Orders UNION ALL SELECT SUM(price) FROM DeletedOrders;",
+    "rows": [
+      {
+        "SUM(price)": 145851.3
+      },
+      {
+        "SUM(price)": 2360
+      }
+    ]
+  },
+  {
+    "query": "SELECT strftime('%Y-%m', date) AS month, SUM(price) AS monthly_revenue FROM Orders GROUP BY month;",
+    "rows": [
+      {
+        "month": "2025-01",
+        "monthly_revenue": 234
+      },
+      {
+        "month": "2025-02",
+        "monthly_revenue": 126594
+      },
+      {
+        "month": "2025-03",
+        "monthly_revenue": 19023.3
+      }
+    ]
+  },
+  {
+    "query": "SELECT strftime('%Y-%m', date) AS month, SUM(price) AS monthly_revenue FROM DeletedOrders GROUP BY month;",
+    "rows": [
+      {
+        "month": "2025-02",
+        "monthly_revenue": 280
+      },
+      {
+        "month": "2025-03",
+        "monthly_revenue": 2080
+      }
+    ]
+  },
+  {
+    "query": "SELECT strftime('%Y-%m', o.date) AS order_month, SUM(o.price) AS order_revenue, strftime('%Y-%m', d.date) AS deleted_order_month, SUM(d.price) AS deleted_revenue FROM Orders o LEFT JOIN DeletedOrders d ON strftime('%Y-%m', o.date) = strftime('%Y-%m', d.date) GROUP BY order_month, deleted_order_month;",
+    "rows": [
+      {
+        "order_month": "2025-01",
+        "order_revenue": 234,
+        "deleted_order_month": null,
+        "deleted_revenue": null
+      },
+      {
+        "order_month": "2025-02",
+        "order_revenue": 253188,
+        "deleted_order_month": "2025-02",
+        "deleted_revenue": 28000
+      },
+      {
+        "order_month": "2025-03",
+        "order_revenue": 190233,
+        "deleted_order_month": "2025-03",
+        "deleted_revenue": 309920
+      }
+    ]
+  }
+]
