@@ -1,85 +1,195 @@
 [
   {
-    "query": "SELECT SUM(price) FROM Orders WHERE STRFTIME('%Y', date) = '2025'",
+    "query": "SELECT Product FROM \"Chocolate Sales\" ORDER BY REPLACE(REPLACE(Amount, '$', ''), ',', '') DESC LIMIT 1;",
     "rows": [
       {
-        "SUM(price)": 145851.3
+        "Product": "Almond Choco"
       }
     ]
   },
   {
-    "query": "SELECT STRFTIME('%m', date) AS month, SUM(price) FROM Orders WHERE STRFTIME('%Y', date) = '2025' GROUP BY month",
+    "query": "SELECT Product, SUM(CAST(REPLACE(REPLACE(Amount, '$', ''), ',', '') AS REAL)) AS TotalAmount FROM \"Chocolate Sales\" GROUP BY Product ORDER BY TotalAmount DESC;",
     "rows": [
       {
-        "month": "01",
-        "SUM(price)": 234
+        "Product": "Smooth Sliky Salty",
+        "TotalAmount": 349692
       },
       {
-        "month": "02",
-        "SUM(price)": 126594
+        "Product": "50% Dark Bites",
+        "TotalAmount": 341712
       },
       {
-        "month": "03",
-        "SUM(price)": 19023.3
-      }
-    ]
-  },
-  {
-    "query": "SELECT SUM(price) FROM DeletedOrders WHERE STRFTIME('%Y', date) = '2025'",
-    "rows": [
-      {
-        "SUM(price)": 2360
-      }
-    ]
-  },
-  {
-    "query": "SELECT STRFTIME('%m', date) AS month, SUM(price) FROM DeletedOrders WHERE STRFTIME('%Y', date) = '2025' GROUP BY month",
-    "rows": [
-      {
-        "month": "02",
-        "SUM(price)": 280
+        "Product": "White Choc",
+        "TotalAmount": 329147
       },
       {
-        "month": "03",
-        "SUM(price)": 2080
-      }
-    ]
-  },
-  {
-    "query": "SELECT T2.uname, SUM(T1.price) FROM Orders AS T1 INNER JOIN User AS T2 ON T1.cashier = T2.userid WHERE STRFTIME('%Y', T1.date) = '2025' GROUP BY T2.uname",
-    "rows": [
-      {
-        "uname": "Ajay Francis Anchan",
-        "SUM(T1.price)": 145617.3
+        "Product": "Peanut Butter Cubes",
+        "TotalAmount": 324842
       },
       {
-        "uname": "Reevan",
-        "SUM(T1.price)": 234
+        "Product": "Eclairs",
+        "TotalAmount": 312445
+      },
+      {
+        "Product": "99% Dark & Pure",
+        "TotalAmount": 299796
+      },
+      {
+        "Product": "85% Dark Bars",
+        "TotalAmount": 299229
+      },
+      {
+        "Product": "Organic Choco Syrup",
+        "TotalAmount": 294700
+      },
+      {
+        "Product": "Spicy Special Slims",
+        "TotalAmount": 293454
+      },
+      {
+        "Product": "Mint Chip Choco",
+        "TotalAmount": 283969
+      },
+      {
+        "Product": "Almond Choco",
+        "TotalAmount": 277536
+      },
+      {
+        "Product": "Manuka Honey Choco",
+        "TotalAmount": 275541
+      },
+      {
+        "Product": "Milk Bars",
+        "TotalAmount": 269248
+      },
+      {
+        "Product": "Raspberry Choco",
+        "TotalAmount": 264740
+      },
+      {
+        "Product": "After Nines",
+        "TotalAmount": 261331
+      },
+      {
+        "Product": "Fruit & Nut Bars",
+        "TotalAmount": 259147
+      },
+      {
+        "Product": "Drinking Coco",
+        "TotalAmount": 256655
+      },
+      {
+        "Product": "Orange Choco",
+        "TotalAmount": 256144
+      },
+      {
+        "Product": "Baker's Choco Chips",
+        "TotalAmount": 249613
+      },
+      {
+        "Product": "Choco Coated Almonds",
+        "TotalAmount": 241486
+      },
+      {
+        "Product": "Caramel Stuffed Bars",
+        "TotalAmount": 231588
+      },
+      {
+        "Product": "70% Dark Bites",
+        "TotalAmount": 211610
       }
     ]
   },
   {
-    "query": "SELECT T2.uname, SUM(T1.price) FROM DeletedOrders AS T1 INNER JOIN User AS T2 ON T1.cashier = T2.userid WHERE STRFTIME('%Y', T1.date) = '2025' GROUP BY T2.uname",
+    "query": "SELECT Product, SUM(\"Boxes Shipped\") AS TotalBoxesShipped FROM \"Chocolate Sales\" GROUP BY Product ORDER BY TotalBoxesShipped DESC;",
     "rows": [
       {
-        "uname": "Ajay Francis Anchan",
-        "SUM(T1.price)": 2360
-      }
-    ]
-  },
-  {
-    "query": "SELECT SUM(T1.price) FROM Orders AS T1 INNER JOIN DiscountedOrders AS T2 ON T1.billno = T2.billno  WHERE STRFTIME('%Y', T1.date) = '2025'",
-    "rows": [
+        "Product": "50% Dark Bites",
+        "TotalBoxesShipped": 9792
+      },
       {
-        "SUM(T1.price)": 75
-      }
-    ]
-  },
-  {
-    "query": "SELECT SUM(T1.price) FROM Orders AS T1 WHERE STRFTIME('%Y', T1.date) = '2025' AND T1.billno NOT IN (SELECT billno FROM DiscountedOrders)",
-    "rows": [
+        "Product": "Smooth Sliky Salty",
+        "TotalBoxesShipped": 8810
+      },
       {
-        "SUM(T1.price)": 145776.3
+        "Product": "Eclairs",
+        "TotalBoxesShipped": 8757
+      },
+      {
+        "Product": "Caramel Stuffed Bars",
+        "TotalBoxesShipped": 8717
+      },
+      {
+        "Product": "Spicy Special Slims",
+        "TotalBoxesShipped": 8685
+      },
+      {
+        "Product": "Drinking Coco",
+        "TotalBoxesShipped": 8660
+      },
+      {
+        "Product": "Milk Bars",
+        "TotalBoxesShipped": 8330
+      },
+      {
+        "Product": "Peanut Butter Cubes",
+        "TotalBoxesShipped": 8304
+      },
+      {
+        "Product": "After Nines",
+        "TotalBoxesShipped": 8257
+      },
+      {
+        "Product": "White Choc",
+        "TotalBoxesShipped": 8240
+      },
+      {
+        "Product": "Mint Chip Choco",
+        "TotalBoxesShipped": 8207
+      },
+      {
+        "Product": "99% Dark & Pure",
+        "TotalBoxesShipped": 8127
+      },
+      {
+        "Product": "70% Dark Bites",
+        "TotalBoxesShipped": 8015
+      },
+      {
+        "Product": "85% Dark Bars",
+        "TotalBoxesShipped": 7793
+      },
+      {
+        "Product": "Manuka Honey Choco",
+        "TotalBoxesShipped": 7781
+      },
+      {
+        "Product": "Organic Choco Syrup",
+        "TotalBoxesShipped": 7749
+      },
+      {
+        "Product": "Fruit & Nut Bars",
+        "TotalBoxesShipped": 7738
+      },
+      {
+        "Product": "Orange Choco",
+        "TotalBoxesShipped": 7732
+      },
+      {
+        "Product": "Raspberry Choco",
+        "TotalBoxesShipped": 7115
+      },
+      {
+        "Product": "Baker's Choco Chips",
+        "TotalBoxesShipped": 6998
+      },
+      {
+        "Product": "Almond Choco",
+        "TotalBoxesShipped": 6736
+      },
+      {
+        "Product": "Choco Coated Almonds",
+        "TotalBoxesShipped": 6464
       }
     ]
   }

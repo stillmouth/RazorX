@@ -4,7 +4,7 @@ import random
 import matplotlib.pyplot as plt
 import seaborn as sns
 from google import genai
-
+import pandas as pd
 # Set up Google API client
 API_KEY = os.environ.get("GOOGLE_GRAPH_API_KEY")  # Fetch from environment variables
 client = genai.Client(api_key=API_KEY)
@@ -38,6 +38,8 @@ You must diversify the amount of graphs whenever appropriate. Use different kind
 scatter plots, box plots, heatmaps wherever appropriate but ensure you use different kind of charts and not just bar plots.
 The function name must be "visualize_query(query_index, query_data, description="")"
 Ensure all the column names are proper. Make your plots colorful. Add Legends. 
+Ensure the titles are appropriate and customised well for the query. 
+Use appropriate graphs for results with only one column.
 """
 
 # Send the prompt in a single API call to generate the visualization code

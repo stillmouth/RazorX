@@ -9,10 +9,10 @@ warnings.filterwarnings("ignore", category=UserWarning, module="whisper")
 # Load the Whisper model
 model = whisper.load_model("base")
 
-def transcribe(audio_path):
+def transcribe(audio_path,language='en'):
     try:
         # Transcribe the audio file
-        result = model.transcribe(audio_path)
+        result = model.transcribe(audio_path,language=language)
         # Log transcription to terminal
         return result['text']
     except Exception as e:
