@@ -1,329 +1,79 @@
-import os
 import json
+import os
 import random
-import sys
-import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-import textwrap
-from pandas.plotting import parallel_coordinates
+from google import genai
 
-# Set a colorful seaborn style and palette
-sns.set_theme(style="whitegrid", palette="bright")
+# Set up Google API client
+API_KEY = os.environ.get("GOOGLE_GRAPH_API_KEY")  # Fetch from environment variables
+client = genai.Client(api_key=API_KEY)
 
-# Ensure charts directory exists
-CHARTS_DIR = "charts"
-os.makedirs(CHARTS_DIR, exist_ok=True)
+# Load SQL results from file
+with open("sql_results.json", "r") as file:
+    sql_results = json.load(file)
 
-# Load SQL results from JSON file
-SQL_RESULTS_FILE = "sql_results.json"
-if not os.path.exists(SQL_RESULTS_FILE):
-    print("Error: sql_results.json not found!")
-    sys.exit(1)  # Use sys.exit() instead of exit()
+# Ensure charts folder exists
+os.makedirs("charts", exist_ok=True)
 
-try:
-    with open(SQL_RESULTS_FILE, "r") as file:
-        sql_results = json.load(file)
-except json.JSONDecodeError as e:
-    print(f"Error decoding JSON: {e}")
-    sys.exit(1)
-except Exception as e:
-    print(f"Unexpected error loading {SQL_RESULTS_FILE}: {e}")
-    sys.exit(1)
+# Prepare a sample (max 12 rows per query) for the API prompt
+query_samples = []
+for result in sql_results:
+    query = result["query"]
+    rows = result["rows"]
+    sample_rows = random.sample(rows, min(12, len(rows)))
+    query_samples.append({"query": query, "sample": sample_rows})
 
-# Function to truncate long text to a maximum of 30 items for visualization
-def truncate_items(items, max_items=30):
-    """
-    Truncate a list of items to a maximum length for visualization.
-    """
-    if len(items) > max_items:
-        return items[:max_items] + ["..."]
-    return items
+# Construct the prompt with all queries and their sample data in one go
+prompt = """Write a Python script to visualize the following SQL query results:
 
-# Function to wrap long text
-def wrap_text(text, width=20):
-    """Wrap text to a specified width."""
-    return "\n".join(textwrap.wrap(text, width))
+"""
+for qs in query_samples:
+    prompt += f"Query: {qs['query']}\nSample Data: {qs['sample']}\n\n"
 
-# Function to filter large categorical variables
-def filter_large_categorical(df):
-    """
-    Filter out categories with too many unique values for better visualization.
-    """
-    for col in df.select_dtypes(include=['object']).columns:
-        if df[col].nunique() > 20:
-            top_categories = df[col].value_counts().nlargest(20).index
-            df = df[df[col].isin(top_categories)]
-    return df
+prompt += """For each query, generate an appropriate graph using matplotlib or seaborn and save it as a PNG file in the 'charts' folder.
+Assume matplotlib and seaborn are already imported, and do not include any import statements.
+Return only valid Python code without explanations, comments, or markdown formatting. Be creative in your graphs.
+You must diversify the amount of graphs whenever appropriate. Use different kind of bar charts, pie charts, pairplots, lineplots, histograms,
+scatter plots, box plots, heatmaps wherever appropriate but ensure you use different kind of charts and not just bar plots.
+The function name must be "visualize_query(query_index, query_data, description="")"
+Ensure all the column names are proper. Make your plots colorful. Add Legends. 
+"""
 
-# Function to bias graph type selection based on the number of rows
-def choose_graph_type(num_columns, num_items):
-    """
-    Choose a graph type based on the number of columns and rows, with bias for certain types.
-    """
-    if num_columns == 1:
-        # Univariate graphs
-        if num_items > 25:
-            # Prefer histograms and box plots for large datasets
-            graph_types = ["hist", "box", "violin", "rug", "count"]
-        else:
-            # Prefer pie charts and count plots for smaller datasets
-            graph_types = ["pie", "count", "box", "violin"]
-    elif num_columns == 2:
-        # Bivariate graphs
-        if num_items > 25:
-            # Prefer scatter plots and hexbin for large datasets
-            graph_types = ["scatter", "hexbin", "reg", "line", "area"]
-        else:
-            # Prefer bar and line plots for smaller datasets
-            graph_types = ["bar", "line", "reg"]
-    else:
-        # Multivariate graphs
-        graph_types = ["heatmap", "pairplot", "stacked_bar", "grouped_bar", "clustermap", "parallel"]
+# Send the prompt in a single API call to generate the visualization code
+response = client.models.generate_content(
+    model="gemini-2.0-flash-thinking-exp-01-21", contents=prompt
+)
+generated_code = response.text
 
-    return random.choice(graph_types)
+# Remove markdown formatting if present
+if generated_code.startswith("```python"):
+    generated_code = generated_code[9:]
+if generated_code.endswith("```"):
+    generated_code = generated_code[:-3]
 
-# Function to generate and save a graph
-def generate_graph(df, output_prefix):
-    """
-    Generates a random graph based on the number of columns in df and saves it as a PNG.
-    Uses a variety of graph types and colorful palettes.
-    """
-    df = filter_large_categorical(df)
-    num_columns = len(df.columns)
-    num_items = len(df)
+print("Generated Code:\n", generated_code)  # Debugging step
 
-    # Choose a graph type with bias based on the number of rows
-    chosen_graph = choose_graph_type(num_columns, num_items)
-    print(f"Chosen graph type: {chosen_graph}")
-    col_names = df.columns.tolist()
+# Prepare the full dataset for execution; store the original list-of-dictionaries.
+exec_env = {"os": os, "plt": plt, "sns": sns, "data_sets": {}}
+for result in sql_results:
+    query = result["query"]
+    rows = result["rows"]
+    exec_env["data_sets"][query] = rows  # Use the original list-of-dictionaries
 
-    try:
-        plt.figure(figsize=(8, 6))
+# Execute the generated code. This code should define a function 'visualize_query'
+exec(generated_code, exec_env)
 
-        if chosen_graph == "hist":
-            col = col_names[0]
-            sns.histplot(df[col], bins=10, color="skyblue")
-            plt.xlabel(col)
-            plt.ylabel("Frequency")
-            plt.title(f"Histogram of {col}")
-        
-        elif chosen_graph == "box":
-            col = col_names[0]
-            sns.boxplot(y=df[col], color="lightgreen")
-            plt.ylabel(col)
-            plt.title(f"Box Plot of {col}")
-            
-        elif chosen_graph == "violin":
-            col = col_names[0]
-            sns.violinplot(y=df[col], color="orchid")
-            plt.ylabel(col)
-            plt.title(f"Violin Plot of {col}")
-            
-        elif chosen_graph == "pie":
-            col = col_names[0]
-            value_counts = df[col].value_counts()
-            if len(value_counts) > 30:
-                top_values = value_counts.nlargest(30)
-                labels = truncate_items(top_values.index.tolist())
-                sizes = top_values.values
-            else:
-                labels = value_counts.index.tolist()
-                sizes = value_counts.values
-            plt.pie(sizes, labels=labels, autopct="%1.1f%%", colors=sns.color_palette("bright"))
-            plt.title(f"Pie Chart of {col}")
-            
-        elif chosen_graph == "rug":
-            col = col_names[0]
-            sns.rugplot(df[col], color="purple")
-            plt.xlabel(col)
-            plt.title(f"Rug Plot of {col}")
-            
-        elif chosen_graph == "count":
-            col = col_names[0]
-            value_counts = df[col].value_counts()
-            if len(value_counts) > 30:
-                top_values = value_counts.nlargest(30)
-                labels = truncate_items(top_values.index.tolist())
-                counts = top_values.values
-            else:
-                labels = value_counts.index.tolist()
-                counts = value_counts.values
-            sns.barplot(x=labels, y=counts, palette="bright")
-            plt.xlabel(col)
-            plt.ylabel("Count")
-            plt.title(f"Count Plot of {col}")
-            
-        elif chosen_graph == "scatter":
-            if num_items > 25:  # Only use scatter plots for larger datasets
-                x_col, y_col = col_names[:2]
-                sns.scatterplot(x=df[x_col], y=df[y_col], color="dodgerblue")
-                plt.xlabel(x_col)
-                plt.ylabel(y_col)
-                plt.title(f"Scatter Plot: {x_col} vs {y_col}")
-            else:
-                print("Skipping scatter plot for small dataset.")
-                return
-            
-        elif chosen_graph == "bar":
-            x_col, y_col = col_names[:2]
-            sns.barplot(x=df[x_col], y=df[y_col], palette="bright")
-            plt.xlabel(x_col)
-            plt.ylabel(y_col)
-            plt.title(f"Bar Chart: {x_col} vs {y_col}")
-            
-        elif chosen_graph == "line":
-            x_col, y_col = col_names[:2]
-            sns.lineplot(x=df[x_col], y=df[y_col], color="seagreen")
-            plt.xlabel(x_col)
-            plt.ylabel(y_col)
-            plt.title(f"Line Plot: {x_col} vs {y_col}")
-            
-        elif chosen_graph == "reg":
-            x_col, y_col = col_names[:2]
-            sns.regplot(x=df[x_col], y=df[y_col], scatter_kws={"color": "orange"}, line_kws={"color": "blue"})
-            plt.xlabel(x_col)
-            plt.ylabel(y_col)
-            plt.title(f"Regression Plot: {x_col} vs {y_col}")
-            
-        elif chosen_graph == "area":
-            x_col, y_col = col_names[:2]
-            plt.fill_between(df[x_col], df[y_col], color="skyblue", alpha=0.5)
-            plt.xlabel(x_col)
-            plt.ylabel(y_col)
-            plt.title(f"Area Plot: {x_col} vs {y_col}")
-            
-        elif chosen_graph == "hexbin":
-            x_col, y_col = col_names[:2]
-            plt.hexbin(df[x_col], df[y_col], gridsize=25, cmap="Blues")
-            plt.xlabel(x_col)
-            plt.ylabel(y_col)
-            plt.title(f"Hexbin Plot: {x_col} vs {y_col}")
-            
-        elif chosen_graph == "joint":
-            if num_items > 25:  # Only use joint plots for larger datasets
-                x_col, y_col = col_names[:2]
-                jp = sns.jointplot(x=df[x_col], y=df[y_col], kind="scatter", color="magenta")
-                jp.fig.suptitle(f"Joint Plot: {x_col} vs {y_col}", y=1.02)
-                output_path = os.path.join(CHARTS_DIR, f"{output_prefix}_{chosen_graph}.png")
-                jp.fig.tight_layout()
-                jp.fig.savefig(output_path)
-                plt.close('all')
-                print(f"Graph saved: {output_path}")
-                return
-            else:
-                print("Skipping joint plot for small dataset.")
-                return
-            
-        elif chosen_graph == "heatmap":
-            numeric_df = df.select_dtypes(include=["number"])
-            if len(numeric_df.columns) >= 2:
-                sns.heatmap(numeric_df.corr(), annot=True, cmap="coolwarm", fmt=".2f")
-                plt.title("Heatmap of Correlation")
-            else:
-                print("Not enough numeric columns for heatmap.")
-                return
-            
-        elif chosen_graph == "pairplot":
-            numeric_df = df.select_dtypes(include=["number"])
-            if len(numeric_df.columns) >= 2:
-                pp = sns.pairplot(numeric_df, palette="bright")
-                pp.fig.suptitle("Pairplot of Numeric Features", y=1.02)
-                output_path = os.path.join(CHARTS_DIR, f"{output_prefix}_{chosen_graph}.png")
-                pp.fig.tight_layout()
-                pp.fig.savefig(output_path)
-                plt.close('all')
-                print(f"Graph saved: {output_path}")
-                return
-            else:
-                print("Not enough numeric columns for pairplot.")
-                return
-            
-        elif chosen_graph == "stacked_bar":
-            if num_columns >= 3:
-                x_col, y_col, z_col = col_names[:3]
-                grouped = df.groupby([x_col, y_col])[z_col].sum().unstack().fillna(0)
-                grouped.plot(kind="bar", stacked=True, colormap="Paired")
-                plt.xlabel(x_col)
-                plt.ylabel(z_col)
-                plt.title(f"Stacked Bar Chart: {x_col} vs {z_col} by {y_col}")
-            else:
-                print("Not enough columns for stacked bar chart.")
-                return
-            
-        elif chosen_graph == "grouped_bar":
-            if num_columns >= 3:
-                x_col, y_col, z_col = col_names[:3]
-                grouped = df.groupby([x_col, y_col])[z_col].sum().unstack().fillna(0)
-                grouped.plot(kind="bar", colormap="Set2")
-                plt.xlabel(x_col)
-                plt.ylabel(z_col)
-                plt.title(f"Grouped Bar Chart: {x_col} vs {z_col} by {y_col}")
-            else:
-                print("Not enough columns for grouped bar chart.")
-                return
-            
-        elif chosen_graph == "clustermap":
-            numeric_df = df.select_dtypes(include=["number"])
-            if len(numeric_df.columns) >= 2:
-                sns.clustermap(numeric_df.corr(), cmap="vlag", annot=True)
-                plt.title("Clustermap of Correlation")
-            else:
-                print("Not enough numeric columns for clustermap.")
-                return
-            
-        elif chosen_graph == "parallel":
-            if num_columns >= 3:
-                class_col = df.columns[0]
-                parallel_coordinates(df, class_col, colormap=plt.get_cmap("Set1"))
-                plt.title("Parallel Coordinates Plot")
-            else:
-                print("Not enough columns for parallel coordinates plot.")
-                return
-            
-        else:
-            print(f"Graph type '{chosen_graph}' not implemented.")
-            return
-        
-        # Save the plot (for plots created using plt.figure())
-        output_path = os.path.join(CHARTS_DIR, f"{output_prefix}_{chosen_graph}.png")
-        plt.tight_layout()
-        plt.savefig(output_path)
-        plt.close()
-        print(f"Graph saved: {output_path}")
-        
-    except Exception as e:
-        print(f"Error generating {chosen_graph} graph: {e}")
-        plt.close()
-
-# Process each SQL query result and generate a graph
-for i, query_result in enumerate(sql_results):
-    query = query_result.get("query", f"query_{i+1}")
-    rows = query_result.get("rows", [])
-    
-    if not rows:
-        print(f"No data for query: {query}, skipping.")
-        continue
-    
-    df = pd.DataFrame(rows)
-    
-    if df.empty or len(df.columns) < 1:
-        print(f"Skipping empty dataset for query: {query}.")
-        continue
-    
-    # Check if there is at least one numeric column
-    if df.select_dtypes(include=["number"]).empty:
-        print(f"Skipping {query} – No numeric data to plot.")
-        continue
-    
-    # Convert columns to numeric when possible
-    for col in df.columns:
+# Call the visualization function on each full dataset.
+if "visualize_query" in exec_env:
+    for i, (query_text, full_data) in enumerate(exec_env["data_sets"].items(), start=1):
+        query_name = f"query{i}"
         try:
-            df[col] = pd.to_numeric(df[col])
-        except ValueError:
-            pass  # Leave non-numeric columns as is
-    
-    # Generate and save the graph
-    generate_graph(df, f"query_{i+1}")
+            exec_env["visualize_query"](i, full_data)
+            print(f"Graph for query '{query_text}' saved as charts/{query_name}.png")
+        except Exception as e:
+            print(f"Error generating graph for query '{query_text}': {e}")
+else:
+    print("No visualization function found in generated code.")
 
-print("Graph generation completed.")
+print("Graphs saved in charts folder.")

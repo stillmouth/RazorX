@@ -136,8 +136,9 @@ app.post('/execute', async (req, res) => {
     // Step 2.2: Refine SQL queries
     const refinePrompt = `Check for any syntax and logical errors in this: \n${sqlQueries}\n for the question \n${transcription}\n\n
         Given the schema: \n${schema}\n
-        Ensure it is supported by SQLite3. If not, fix it to adhere to SQLite3.
-        Return the SQLQueries in the exact same format after fixing. Do not add anything else in your response.`;
+        Ensure it is supported by SQLite3. If not, fix it to adhere to SQLite3. Remove any incomplete queries if you cannot find the context.
+        Return the SQLQueries in the exact same format after fixing. Do not add anything else in your response.
+        Ensure each query adheres strictly to the schema.`;
 
 
     const apiResponseRefined = await model.generateContent(refinePrompt);
