@@ -135,7 +135,7 @@ function App() {
   return (
     <div className="App">
       <div className="main-container">
-        <h1 className="app-title">RazorX ReportX</h1>
+        <h1 className="app-title">RazorX DataVoX</h1>
 
         {/* Mode Toggle Switch */}
         <div class="controls-container">
