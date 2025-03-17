@@ -41,6 +41,30 @@ function App() {
       console.error("Error accessing microphone:", error);
     }
   };
+  const [selectedFile, setSelectedFile] = useState(null);
+
+  const handleFileChange = (event) => {
+    setSelectedFile(event.target.files[0]);
+  };
+
+  const handleUploadDatabase = async () => {
+    if (!selectedFile) {
+      alert("Please select a file first.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("database", selectedFile);
+
+    try {
+      const response = await axios.post("http://localhost:3000/replacedatabase", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      alert(response.data); // Show success message
+    } catch (error) {
+      alert("Error uploading database: " + error.message);
+    }
+  };
 
   const stopRecording = () => {
     if (mediaRecorderRef.current) {
@@ -114,8 +138,17 @@ function App() {
         <h1 className="app-title">RazorX ReportX</h1>
 
         {/* Mode Toggle Switch */}
-        <div className="mode-toggle">
-          <ModeToggle isManualMode={isManualMode} onToggle={handleModeToggle} />
+        <div class="controls-container">
+          <div className="mode-toggle">
+            <ModeToggle isManualMode={isManualMode} onToggle={handleModeToggle} />
+          </div>
+          {/* Database Upload Section */}
+          <div className="upload-file-container">
+            <input type="file" accept=".db" onChange={handleFileChange} />
+            <button onClick={handleUploadDatabase} disabled={!selectedFile}>
+              Upload Database
+            </button>
+          </div>
         </div>
 
         <div className="button-container">

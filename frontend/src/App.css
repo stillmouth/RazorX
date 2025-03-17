@@ -233,14 +233,32 @@
     font-size: 0.9rem;
   }
 }
-.mode-toggle {
+.controls-container {
   position: absolute;
   top: 20px;
   right: 20px;
   display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 10px;
 }
+
+.mode-toggle {
+  /* Remove absolute positioning */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.upload-file-container {
+  /* Remove margin-top */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Keep the rest of your existing styles */
 
 .mode-toggle label {
   display: flex;
@@ -254,4 +272,28 @@
   width: 20px;
   height: 20px;
   cursor: pointer;
+}
+
+.upload-file-container input[type="file"] {
+  cursor: pointer;
+}
+
+.upload-file-container button {
+  padding: 8px 16px;
+  font-size: 14px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.upload-file-container button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.upload-file-container button:hover:not(:disabled) {
+  background-color: #0056b3;
 }

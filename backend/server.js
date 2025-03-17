@@ -33,10 +33,17 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage,
   fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('audio/')) {
+    const allowedTypes = [
+      "audio/", // Allow all audio types
+      "application/x-sqlite3", // SQLite database MIME type
+      "application/octet-stream", // Generic binary files
+      "application/vnd.sqlite3" // Alternative SQLite type
+    ];
+
+    if (allowedTypes.some(type => file.mimetype.startsWith(type)) || file.originalname.endsWith(".db")) {
       cb(null, true);
     } else {
-      cb(new Error('Only audio files are allowed!'), false);
+      cb(new Error("Only audio or .db files are allowed!"), false);
     }
   },
 });
@@ -58,6 +65,25 @@ async function runPythonScript(scriptPath, args) {
 
 // Handle the file upload endpoint
 const sqlite3 = require('sqlite3').verbose();
+
+//Handle Database.db replace and uploads
+// Route to replace database.db
+app.post('/replacedatabase', upload.single('database'), (req, res) => {
+  if (!req.file) {
+      return res.status(400).send('No file uploaded.');
+  }
+
+  const oldDbPath = path.join(__dirname, 'database.db');
+  const newDbPath = req.file.path; // Temporary file path from multer
+
+  // Replace the old database file
+  fs.rename(newDbPath, oldDbPath, (err) => {
+      if (err) {
+          return res.status(500).send('Error replacing database: ' + err.message);
+      }
+      res.send('Database replaced successfully.');
+  });
+});
 
 // Handle the file upload endpoint
 app.post('/upload', upload.single('audio'), async (req, res) => {
