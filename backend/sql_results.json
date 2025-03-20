@@ -1,357 +1,413 @@
 [
   {
-    "query": "SELECT T2.catname, SUM(T3.quantity * T4.cost) AS revenue FROM Orders AS T1 INNER JOIN Category AS T2 ON T4.category = T2.catid INNER JOIN OrderDetails AS T3 ON T1.billno = T3.orderid INNER JOIN FoodItem AS T4 ON T3.foodid = T4.fid WHERE STRFTIME('%Y', T1.date) = '2025' GROUP BY T2.catname",
+    "query": "SELECT Product FROM Financials GROUP BY Product ORDER BY CAST(REPLACE(SUBSTR(\"Units Sold\", 2), ',', '') AS REAL) DESC LIMIT 1;",
     "rows": [
       {
-        "catname": "Boba",
-        "revenue": 960
-      },
-      {
-        "catname": "Burgers",
-        "revenue": 8400
-      },
-      {
-        "catname": "Cold Coffee",
-        "revenue": 1600
-      },
-      {
-        "catname": "French Fries",
-        "revenue": 160
-      },
-      {
-        "catname": "Grilled Sandwiches",
-        "revenue": 2310
-      },
-      {
-        "catname": "Juices",
-        "revenue": 470
-      },
-      {
-        "catname": "Lassi",
-        "revenue": 9260
-      },
-      {
-        "catname": "Milkshakes",
-        "revenue": 9200
-      },
-      {
-        "catname": "Momos",
-        "revenue": 2410
-      },
-      {
-        "catname": "Pops",
-        "revenue": 1680
-      },
-      {
-        "catname": "Wraps",
-        "revenue": 9240
+        "Product": "Amarilla"
       }
     ]
   },
   {
-    "query": "SELECT T4.fname, SUM(T3.quantity * T4.cost) AS revenue FROM Orders AS T1 INNER JOIN OrderDetails AS T3 ON T1.billno = T3.orderid INNER JOIN FoodItem AS T4 ON T3.foodid = T4.fid WHERE STRFTIME('%Y', T1.date) = '2025' GROUP BY T4.fname",
+    "query": "SELECT Product, SUM(CAST(REPLACE(SUBSTR(\"Units Sold\", 2), ',', '') AS REAL)) AS TotalUnitsSold FROM Financials GROUP BY Product ORDER BY TotalUnitsSold DESC;",
     "rows": [
       {
-        "fname": "8PM Coffee",
-        "revenue": 680
+        "Product": "Paseo",
+        "TotalUnitsSold": 338239.5
       },
       {
-        "fname": "Banana Shake",
-        "revenue": 2000
+        "Product": "VTT",
+        "TotalUnitsSold": 168783
       },
       {
-        "fname": "Belgian Coffee",
-        "revenue": 320
+        "Product": "Velo",
+        "TotalUnitsSold": 162424.5
       },
       {
-        "fname": "Black Currant Shake",
-        "revenue": 150
+        "Product": "Amarilla",
+        "TotalUnitsSold": 155315
       },
       {
-        "fname": "Butterscotch Lassi",
-        "revenue": 3600
+        "Product": "Montana",
+        "TotalUnitsSold": 154198
       },
       {
-        "fname": "Chicken Burger",
-        "revenue": 4380
-      },
-      {
-        "fname": "Chicken Cheese Burger",
-        "revenue": 3900
-      },
-      {
-        "fname": "Chicken Cheese Pops",
-        "revenue": 910
-      },
-      {
-        "fname": "Chicken Momos",
-        "revenue": 1650
-      },
-      {
-        "fname": "Chicken Peri Peri Momos",
-        "revenue": 90
-      },
-      {
-        "fname": "Chicken Sandwich",
-        "revenue": 50
-      },
-      {
-        "fname": "Chicken Schezwan Sandwich",
-        "revenue": 2030
-      },
-      {
-        "fname": "Chicken Schezwan Wrap",
-        "revenue": 1610
-      },
-      {
-        "fname": "Chicken Shezwan Momos",
-        "revenue": 90
-      },
-      {
-        "fname": "Chicken Wrap",
-        "revenue": 6060
-      },
-      {
-        "fname": "Chocolate Shake",
-        "revenue": 350
-      },
-      {
-        "fname": "Coffee Italia",
-        "revenue": 240
-      },
-      {
-        "fname": "Hard Rock Coffee",
-        "revenue": 360
-      },
-      {
-        "fname": "Lime Juice",
-        "revenue": 200
-      },
-      {
-        "fname": "Mango Bubble Tea",
-        "revenue": 960
-      },
-      {
-        "fname": "Mango Lassi",
-        "revenue": 2700
-      },
-      {
-        "fname": "Mint Lime",
-        "revenue": 150
-      },
-      {
-        "fname": "Oreo Shake",
-        "revenue": 2450
-      },
-      {
-        "fname": "Peri Peri Fries",
-        "revenue": 160
-      },
-      {
-        "fname": "Strawberry Lassi",
-        "revenue": 2960
-      },
-      {
-        "fname": "Strawberry Shake",
-        "revenue": 250
-      },
-      {
-        "fname": "Vanilla Shake",
-        "revenue": 4000
-      },
-      {
-        "fname": "Veg Burger",
-        "revenue": 50
-      },
-      {
-        "fname": "Veg Cheese Burger",
-        "revenue": 70
-      },
-      {
-        "fname": "Veg Cheese Pops",
-        "revenue": 770
-      },
-      {
-        "fname": "Veg Momos",
-        "revenue": 400
-      },
-      {
-        "fname": "Veg Sandwich",
-        "revenue": 100
-      },
-      {
-        "fname": "Veg Schezwan Sandwich",
-        "revenue": 180
-      },
-      {
-        "fname": "Veg Schezwan Wrap",
-        "revenue": 120
-      },
-      {
-        "fname": "Veg Shezwan Momos",
-        "revenue": 180
-      },
-      {
-        "fname": "Veg Wrap",
-        "revenue": 1450
-      },
-      {
-        "fname": "Watermelon Juice",
-        "revenue": 120
+        "Product": "Carretera",
+        "TotalUnitsSold": 146846
       }
     ]
   },
   {
-    "query": "SELECT DISTINCT T2.catname FROM FoodItem AS T1 INNER JOIN Category AS T2 ON T1.category = T2.catid INNER JOIN OrderDetails AS T3 ON T1.fid = T3.foodid INNER JOIN Orders AS T4 ON T3.orderid = T4.billno WHERE STRFTIME('%Y', T4.date) = '2025'",
+    "query": "SELECT Product, Year, SUM(CAST(REPLACE(SUBSTR(\"Units Sold\", 2), ',', '') AS REAL)) AS TotalUnitsSold FROM Financials GROUP BY Product, Year ORDER BY Product, Year;",
     "rows": [
       {
-        "catname": "Wraps"
+        "Product": "Amarilla",
+        "Year": 2013,
+        "TotalUnitsSold": 33688
       },
       {
-        "catname": "Milkshakes"
+        "Product": "Amarilla",
+        "Year": 2014,
+        "TotalUnitsSold": 121627
       },
       {
-        "catname": "French Fries"
+        "Product": "Carretera",
+        "Year": 2013,
+        "TotalUnitsSold": 31404
       },
       {
-        "catname": "Burgers"
+        "Product": "Carretera",
+        "Year": 2014,
+        "TotalUnitsSold": 115442
       },
       {
-        "catname": "Lassi"
+        "Product": "Montana",
+        "Year": 2013,
+        "TotalUnitsSold": 36280
       },
       {
-        "catname": "Juices"
+        "Product": "Montana",
+        "Year": 2014,
+        "TotalUnitsSold": 117918
       },
       {
-        "catname": "Pops"
+        "Product": "Paseo",
+        "Year": 2013,
+        "TotalUnitsSold": 82247
       },
       {
-        "catname": "Cold Coffee"
+        "Product": "Paseo",
+        "Year": 2014,
+        "TotalUnitsSold": 255992.5
       },
       {
-        "catname": "Momos"
+        "Product": "VTT",
+        "Year": 2013,
+        "TotalUnitsSold": 41584
       },
       {
-        "catname": "Grilled Sandwiches"
+        "Product": "VTT",
+        "Year": 2014,
+        "TotalUnitsSold": 127199
       },
       {
-        "catname": "Boba"
+        "Product": "Velo",
+        "Year": 2013,
+        "TotalUnitsSold": 39471
+      },
+      {
+        "Product": "Velo",
+        "Year": 2014,
+        "TotalUnitsSold": 122953.5
       }
     ]
   },
   {
-    "query": "SELECT DISTINCT T1.fname FROM FoodItem AS T1 INNER JOIN OrderDetails AS T2 ON T1.fid = T2.foodid INNER JOIN Orders AS T3 ON T2.orderid = T3.billno WHERE STRFTIME('%Y', T3.date) = '2025'",
+    "query": "SELECT Product, Segment, SUM(CAST(REPLACE(SUBSTR(\"Units Sold\", 2), ',', '') AS REAL)) AS TotalUnitsSold FROM Financials GROUP BY Product, Segment ORDER BY Product, Segment;",
     "rows": [
       {
-        "fname": "Chicken Wrap"
+        "Product": "Amarilla",
+        "Segment": "Channel Partners",
+        "TotalUnitsSold": 29191.5
       },
       {
-        "fname": "Veg Wrap"
+        "Product": "Amarilla",
+        "Segment": "Enterprise",
+        "TotalUnitsSold": 22823
       },
       {
-        "fname": "Strawberry Shake"
+        "Product": "Amarilla",
+        "Segment": "Government",
+        "TotalUnitsSold": 68044.5
       },
       {
-        "fname": "Chocolate Shake"
+        "Product": "Amarilla",
+        "Segment": "Midmarket",
+        "TotalUnitsSold": 18508
       },
       {
-        "fname": "Peri Peri Fries"
+        "Product": "Amarilla",
+        "Segment": "Small Business",
+        "TotalUnitsSold": 16748
       },
       {
-        "fname": "Chicken Cheese Burger"
+        "Product": "Carretera",
+        "Segment": "Channel Partners",
+        "TotalUnitsSold": 24811
       },
       {
-        "fname": "Mango Lassi"
+        "Product": "Carretera",
+        "Segment": "Enterprise",
+        "TotalUnitsSold": 28553.5
       },
       {
-        "fname": "Chicken Burger"
+        "Product": "Carretera",
+        "Segment": "Government",
+        "TotalUnitsSold": 54911.5
       },
       {
-        "fname": "Vanilla Shake"
+        "Product": "Carretera",
+        "Segment": "Midmarket",
+        "TotalUnitsSold": 24320
       },
       {
-        "fname": "Oreo Shake"
+        "Product": "Carretera",
+        "Segment": "Small Business",
+        "TotalUnitsSold": 14250
       },
       {
-        "fname": "Strawberry Lassi"
+        "Product": "Montana",
+        "Segment": "Channel Partners",
+        "TotalUnitsSold": 23129
       },
       {
-        "fname": "Lime Juice"
+        "Product": "Montana",
+        "Segment": "Enterprise",
+        "TotalUnitsSold": 22049.5
       },
       {
-        "fname": "Veg Cheese Pops"
+        "Product": "Montana",
+        "Segment": "Government",
+        "TotalUnitsSold": 64657
       },
       {
-        "fname": "Hard Rock Coffee"
+        "Product": "Montana",
+        "Segment": "Midmarket",
+        "TotalUnitsSold": 20636
       },
       {
-        "fname": "8PM Coffee"
+        "Product": "Montana",
+        "Segment": "Small Business",
+        "TotalUnitsSold": 23726.5
       },
       {
-        "fname": "Coffee Italia"
+        "Product": "Paseo",
+        "Segment": "Channel Partners",
+        "TotalUnitsSold": 40892
       },
       {
-        "fname": "Belgian Coffee"
+        "Product": "Paseo",
+        "Segment": "Enterprise",
+        "TotalUnitsSold": 44580
       },
       {
-        "fname": "Mint Lime"
+        "Product": "Paseo",
+        "Segment": "Government",
+        "TotalUnitsSold": 146798.5
       },
       {
-        "fname": "Butterscotch Lassi"
+        "Product": "Paseo",
+        "Segment": "Midmarket",
+        "TotalUnitsSold": 64899
       },
       {
-        "fname": "Chicken Momos"
+        "Product": "Paseo",
+        "Segment": "Small Business",
+        "TotalUnitsSold": 41070
       },
       {
-        "fname": "Veg Momos"
+        "Product": "VTT",
+        "Segment": "Channel Partners",
+        "TotalUnitsSold": 27021
       },
       {
-        "fname": "Banana Shake"
+        "Product": "VTT",
+        "Segment": "Enterprise",
+        "TotalUnitsSold": 19996
       },
       {
-        "fname": "Black Currant Shake"
+        "Product": "VTT",
+        "Segment": "Government",
+        "TotalUnitsSold": 64098.5
       },
       {
-        "fname": "Chicken Shezwan Momos"
+        "Product": "VTT",
+        "Segment": "Midmarket",
+        "TotalUnitsSold": 24230.5
       },
       {
-        "fname": "Chicken Peri Peri Momos"
+        "Product": "VTT",
+        "Segment": "Small Business",
+        "TotalUnitsSold": 33437
       },
       {
-        "fname": "Veg Shezwan Momos"
+        "Product": "Velo",
+        "Segment": "Channel Partners",
+        "TotalUnitsSold": 16219
       },
       {
-        "fname": "Chicken Cheese Pops"
+        "Product": "Velo",
+        "Segment": "Enterprise",
+        "TotalUnitsSold": 30550
       },
       {
-        "fname": "Watermelon Juice"
+        "Product": "Velo",
+        "Segment": "Government",
+        "TotalUnitsSold": 72163.5
       },
       {
-        "fname": "Chicken Schezwan Wrap"
+        "Product": "Velo",
+        "Segment": "Midmarket",
+        "TotalUnitsSold": 19584.5
       },
       {
-        "fname": "Veg Schezwan Wrap"
+        "Product": "Velo",
+        "Segment": "Small Business",
+        "TotalUnitsSold": 23907.5
+      }
+    ]
+  },
+  {
+    "query": "SELECT Product, Country, SUM(CAST(REPLACE(SUBSTR(\"Units Sold\", 2), ',', '') AS REAL)) AS TotalUnitsSold FROM Financials GROUP BY Product, Country ORDER BY Product, Country;",
+    "rows": [
+      {
+        "Product": "Amarilla",
+        "Country": "Canada",
+        "TotalUnitsSold": 29232
       },
       {
-        "fname": "Chicken Schezwan Sandwich"
+        "Product": "Amarilla",
+        "Country": "France",
+        "TotalUnitsSold": 31603
       },
       {
-        "fname": "Veg Sandwich"
+        "Product": "Amarilla",
+        "Country": "Germany",
+        "TotalUnitsSold": 30614.5
       },
       {
-        "fname": "Veg Schezwan Sandwich"
+        "Product": "Amarilla",
+        "Country": "Mexico",
+        "TotalUnitsSold": 28396
       },
       {
-        "fname": "Chicken Sandwich"
+        "Product": "Amarilla",
+        "Country": "United States of America",
+        "TotalUnitsSold": 35469.5
       },
       {
-        "fname": "Veg Burger"
+        "Product": "Carretera",
+        "Country": "Canada",
+        "TotalUnitsSold": 34804
       },
       {
-        "fname": "Veg Cheese Burger"
+        "Product": "Carretera",
+        "Country": "France",
+        "TotalUnitsSold": 34056
       },
       {
-        "fname": "Mango Bubble Tea"
+        "Product": "Carretera",
+        "Country": "Germany",
+        "TotalUnitsSold": 24944
+      },
+      {
+        "Product": "Carretera",
+        "Country": "Mexico",
+        "TotalUnitsSold": 27224
+      },
+      {
+        "Product": "Carretera",
+        "Country": "United States of America",
+        "TotalUnitsSold": 25818
+      },
+      {
+        "Product": "Montana",
+        "Country": "Canada",
+        "TotalUnitsSold": 31488.5
+      },
+      {
+        "Product": "Montana",
+        "Country": "France",
+        "TotalUnitsSold": 31282
+      },
+      {
+        "Product": "Montana",
+        "Country": "Germany",
+        "TotalUnitsSold": 28061
+      },
+      {
+        "Product": "Montana",
+        "Country": "Mexico",
+        "TotalUnitsSold": 31754
+      },
+      {
+        "Product": "Montana",
+        "Country": "United States of America",
+        "TotalUnitsSold": 31612.5
+      },
+      {
+        "Product": "Paseo",
+        "Country": "Canada",
+        "TotalUnitsSold": 78191.5
+      },
+      {
+        "Product": "Paseo",
+        "Country": "France",
+        "TotalUnitsSold": 71606
+      },
+      {
+        "Product": "Paseo",
+        "Country": "Germany",
+        "TotalUnitsSold": 55693.5
+      },
+      {
+        "Product": "Paseo",
+        "Country": "Mexico",
+        "TotalUnitsSold": 63282
+      },
+      {
+        "Product": "Paseo",
+        "Country": "United States of America",
+        "TotalUnitsSold": 69466.5
+      },
+      {
+        "Product": "VTT",
+        "Country": "Canada",
+        "TotalUnitsSold": 41248.5
+      },
+      {
+        "Product": "VTT",
+        "Country": "France",
+        "TotalUnitsSold": 35774.5
+      },
+      {
+        "Product": "VTT",
+        "Country": "Germany",
+        "TotalUnitsSold": 31131
+      },
+      {
+        "Product": "VTT",
+        "Country": "Mexico",
+        "TotalUnitsSold": 26129
+      },
+      {
+        "Product": "VTT",
+        "Country": "United States of America",
+        "TotalUnitsSold": 34500
+      },
+      {
+        "Product": "Velo",
+        "Country": "Canada",
+        "TotalUnitsSold": 32464
+      },
+      {
+        "Product": "Velo",
+        "Country": "France",
+        "TotalUnitsSold": 36609.5
+      },
+      {
+        "Product": "Velo",
+        "Country": "Germany",
+        "TotalUnitsSold": 31050
+      },
+      {
+        "Product": "Velo",
+        "Country": "Mexico",
+        "TotalUnitsSold": 26540
+      },
+      {
+        "Product": "Velo",
+        "Country": "United States of America",
+        "TotalUnitsSold": 35761
       }
     ]
   }

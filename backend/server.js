@@ -146,7 +146,8 @@ app.post('/execute', async (req, res) => {
                     - Do NOT mix 'REASON:' with 'SQLQUERY:'. Return only one type of response.\n
                     - Prioritize providing at least some relevant SQL queries for vague questions instead of returning a reason.\n
                     - Adhere strictly to the provided schema.
-                    - Avoid giving queries that might return the same result.\n`;
+                    - Avoid giving queries that might return the same result.\n
+                    - Be very careful with the column names.\n`;
 
 
     const apiResponse = await model.generateContent(prompt);
